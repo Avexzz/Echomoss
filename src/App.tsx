@@ -1,176 +1,113 @@
-import { Leaf, Moon, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Activity, Leaf, Sparkles } from "lucide-react";
+import type { CSSProperties } from "react";
+import { AmbientField } from "./components/AmbientField";
 import { ConnectPanel } from "./components/ConnectPanel";
 import { GardenShelf } from "./components/GardenShelf";
 import { PlayerDeck } from "./components/PlayerDeck";
 import { Terrarium } from "./components/Terrarium";
 import { TitleBar } from "./components/TitleBar";
+import { useHabitat } from "./hooks/use-habitat";
 import { usePlayback } from "./hooks/use-playback";
-import {
-  EMPTY_GARDEN,
-  addCompletedTrack,
-  addListeningSecond,
-  progressRatio,
-  visualState,
-} from "./lib/garden";
-import type { GardenStats, Playback, VisualState } from "./lib/types";
-
-const GARDEN_KEY = "echomoss:garden:v1";
-const MOTION_KEY = "echomoss:reduce-motion:v1";
+import { progressRatio } from "./lib/garden";
+import { HABITAT_PRESENTATION } from "./lib/presentation";
 
 export default function App() {
   const controller = usePlayback();
   const playback = controller.playback;
-  const [garden, setGarden] = useState<GardenStats>(loadGarden);
-  const [reducedMotion, setReducedMotion] = useState(loadMotion);
-  const [state, setState] = useState<VisualState>(
-    playback?.isPlaying ? "playing" : "dormant",
-  );
-  const previousPlayback = useRef<Playback | null>(playback);
-
-  useEffect(() => {
-    const previous = previousPlayback.current;
-    const next = playback;
-    const nextState = visualState(previous, next);
-    setState(nextState);
-
-    if (
-      previous &&
-      next &&
-      previous.id !== next.id &&
-      progressRatio(previous) >= 0.88
-    ) {
-      setGarden((current) => addCompletedTrack(current, previous.id));
-    }
-    previousPlayback.current = next;
-
-    if (nextState === "transition" || nextState === "bloom") {
-      const returnToListening = window.setTimeout(
-        () => setState(next?.isPlaying ? "playing" : "dormant"),
-        reducedMotion ? 500 : 2_200,
-      );
-      return () => window.clearTimeout(returnToListening);
-    }
-  }, [playback, reducedMotion]);
-
-  useEffect(() => {
-    if (!playback?.isPlaying) return;
-    const listeningTick = window.setInterval(
-      () => setGarden((current) => addListeningSecond(current)),
-      1_000,
-    );
-    return () => window.clearInterval(listeningTick);
-  }, [playback?.isPlaying]);
-
-  useEffect(() => {
-    localStorage.setItem(GARDEN_KEY, JSON.stringify(garden));
-  }, [garden]);
-
-  useEffect(() => {
-    localStorage.setItem(MOTION_KEY, String(reducedMotion));
-    document.documentElement.dataset.motion = reducedMotion
-      ? "reduced"
-      : "full";
-  }, [reducedMotion]);
+  const habitat = useHabitat(playback);
+  const presentation = HABITAT_PRESENTATION[habitat.state];
+  const trackProgress = Math.round(progressRatio(playback) * 100);
+  const progressStyle = {
+    "--track-angle": `${trackProgress * 3.6}deg`,
+  } as CSSProperties;
 
   return (
-    <div className="app-shell">
-      <TitleBar mode={controller.mode} />
+    <div className="app-shell" data-habitat-state={habitat.state}>
+      <AmbientField />
+      <TitleBar
+        mode={controller.mode}
+        onToggleMotion={habitat.toggleMotion}
+        reducedMotion={habitat.reducedMotion}
+      />
 
-      <main>
-        <section className="masthead">
-          <div>
-            <span className="masthead__index">
-              FIELD UNIT 07 · LOCAL LISTENING HABITAT
+      <main className="station">
+        <header className="station-heading">
+          <div className="station-heading__copy">
+            <span className="station-heading__index">
+              <i className={`signal-dot signal-dot--${habitat.state}`} />
+              FIELD UNIT 07 · {presentation.label}
             </span>
             <h1>
-              Grow something
-              <br />
-              <em>quietly alive.</em>
+              Where listening <em>takes root.</em>
             </h1>
             <p>
-              A tiny desktop terrarium shaped by playback — no feed, no streaks,
-              no noise. Just music leaving small botanical traces.
+              A native listening habitat where each finished track leaves a
+              small, permanent trace.
             </p>
           </div>
-          <div className="masthead__seal" aria-hidden="true">
-            <span>ECHOMOSS</span>
-            <Leaf size={28} strokeWidth={1.2} />
-            <small>LOCAL / 001</small>
-          </div>
-        </section>
 
-        <div className="dashboard">
-          <div className="dashboard__left">
-            <Terrarium reducedMotion={reducedMotion} state={state} />
+          <div className="session-dial" style={progressStyle}>
+            <div className="session-dial__ring">
+              <div>
+                <strong>{String(trackProgress).padStart(2, "0")}</strong>
+                <span>%</span>
+              </div>
+            </div>
+            <div className="session-dial__copy">
+              <span>current cycle</span>
+              <strong>{presentation.code}</strong>
+            </div>
+          </div>
+        </header>
+
+        <div className="habitat-grid">
+          <div className="habitat-primary">
+            <Terrarium
+              playback={playback}
+              reducedMotion={habitat.reducedMotion}
+              state={habitat.state}
+            />
             <PlayerDeck
+              loading={controller.loading}
               mode={controller.mode}
               onControl={controller.control}
               playback={playback}
             />
           </div>
-          <div className="dashboard__right">
-            <GardenShelf stats={garden} />
+
+          <aside className="habitat-rail">
+            <GardenShelf stats={habitat.garden} />
             <aside className="field-note">
               <div className="field-note__pin" />
               <span>FIELD NOTE / 01</span>
-              <p>
-                The garden responds to track changes, progress and playback
-                state — never to raw Spotify audio.
-              </p>
+              <p>Metadata makes the weather. Listening makes the memory.</p>
               <small>
-                metadata makes the weather; listening makes the memory.
+                no raw audio leaves the player · every specimen stays local
               </small>
             </aside>
-          </div>
+            <ConnectPanel
+              error={controller.error}
+              loading={controller.loading}
+              onConnect={controller.connect}
+              onDisconnect={controller.disconnect}
+              onSetClientId={controller.setClientId}
+              status={controller.status}
+            />
+          </aside>
         </div>
-
-        <ConnectPanel
-          error={controller.error}
-          loading={controller.loading}
-          onConnect={controller.connect}
-          onDisconnect={controller.disconnect}
-          onSetClientId={controller.setClientId}
-          status={controller.status}
-        />
 
         <footer>
           <span>
             <Sparkles size={13} /> your garden remains on this device
           </span>
-          <button
-            onClick={() => setReducedMotion((current) => !current)}
-            type="button"
-          >
-            {reducedMotion ? <Moon size={13} /> : <Leaf size={13} />}
-            {reducedMotion ? "motion resting" : "motion awake"}
-          </button>
-          <span>ECHOMOSS · NATIVE SPECIMEN 0.2</span>
+          <span>
+            <Activity size={13} /> metadata reactive · audio untouched
+          </span>
+          <span>
+            <Leaf size={13} /> ECHOMOSS · NATIVE SPECIMEN 0.2
+          </span>
         </footer>
       </main>
     </div>
   );
-}
-
-function loadGarden(): GardenStats {
-  try {
-    const stored = JSON.parse(
-      localStorage.getItem(GARDEN_KEY) || "null",
-    ) as GardenStats | null;
-    if (
-      stored &&
-      typeof stored.blooms === "number" &&
-      typeof stored.listeningSeconds === "number" &&
-      Array.isArray(stored.discoveredSpecies)
-    ) {
-      return stored;
-    }
-  } catch {
-    // Begin with a new local habitat.
-  }
-  return EMPTY_GARDEN;
-}
-
-function loadMotion(): boolean {
-  return localStorage.getItem(MOTION_KEY) === "true";
 }

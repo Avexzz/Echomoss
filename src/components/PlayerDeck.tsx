@@ -1,14 +1,21 @@
-import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { AudioLines, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { formatPlaybackTime } from "../lib/presentation";
 import type { Playback, PlaybackAction } from "../lib/types";
 import { BotanicalSprite } from "./BotanicalSprite";
 
 interface PlayerDeckProps {
   playback: Playback | null;
   mode: "demo" | "spotify";
+  loading: boolean;
   onControl: (action: PlaybackAction) => Promise<void>;
 }
 
-export function PlayerDeck({ playback, mode, onControl }: PlayerDeckProps) {
+export function PlayerDeck({
+  playback,
+  mode,
+  loading,
+  onControl,
+}: PlayerDeckProps) {
   const progress = playback?.durationMs
     ? Math.min(100, (playback.progressMs / playback.durationMs) * 100)
     : 0;
@@ -17,12 +24,13 @@ export function PlayerDeck({ playback, mode, onControl }: PlayerDeckProps) {
     <section className="player-deck">
       <div className="panel-label">
         <span>NOW GROWING</span>
-        <span>
+        <span className="player-deck__source">
+          <AudioLines size={11} />
           {mode === "spotify" ? "spotify metadata" : "local specimen"}
         </span>
       </div>
 
-      <div className="track">
+      <div className="track" key={playback?.id || "waiting"}>
         <div className="track__cover">
           {playback?.coverUrl ? (
             <img alt="" src={playback.coverUrl} />
@@ -35,24 +43,42 @@ export function PlayerDeck({ playback, mode, onControl }: PlayerDeckProps) {
           <span className="track__eyebrow">
             {playback?.album || "No active playback"}
           </span>
-          <h1>{playback?.title || "Waiting for a signal"}</h1>
+          <h2>{playback?.title || "Waiting for a signal"}</h2>
           <p>{playback?.artist || "Open Spotify on any device"}</p>
+        </div>
+        <div
+          className="track__activity"
+          data-playing={playback?.isPlaying || undefined}
+          aria-hidden="true"
+        >
+          <i />
+          <i />
+          <i />
+          <i />
         </div>
       </div>
 
       <div className="progress">
-        <div className="progress__track" aria-label="Track progress">
+        <div
+          aria-label="Track progress"
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={Math.round(progress)}
+          className="progress__track"
+          role="progressbar"
+        >
           <span style={{ width: `${progress}%` }} />
         </div>
         <div className="progress__time">
-          <span>{formatTime(playback?.progressMs || 0)}</span>
-          <span>{formatTime(playback?.durationMs || 0)}</span>
+          <span>{formatPlaybackTime(playback?.progressMs || 0)}</span>
+          <span>{formatPlaybackTime(playback?.durationMs || 0)}</span>
         </div>
       </div>
 
       <div className="transport">
         <button
           aria-label="Previous track"
+          disabled={loading}
           onClick={() => void onControl("previous")}
           type="button"
         >
@@ -61,6 +87,7 @@ export function PlayerDeck({ playback, mode, onControl }: PlayerDeckProps) {
         <button
           aria-label={playback?.isPlaying ? "Pause" : "Play"}
           className="transport__primary"
+          disabled={loading}
           onClick={() => void onControl(playback?.isPlaying ? "pause" : "play")}
           type="button"
         >
@@ -72,6 +99,7 @@ export function PlayerDeck({ playback, mode, onControl }: PlayerDeckProps) {
         </button>
         <button
           aria-label="Next track"
+          disabled={loading}
           onClick={() => void onControl("next")}
           type="button"
         >
@@ -83,11 +111,4 @@ export function PlayerDeck({ playback, mode, onControl }: PlayerDeckProps) {
       </div>
     </section>
   );
-}
-
-function formatTime(milliseconds: number): string {
-  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1_000));
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = String(totalSeconds % 60).padStart(2, "0");
-  return `${minutes}:${seconds}`;
 }

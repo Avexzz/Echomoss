@@ -14,15 +14,15 @@
       {
         "label": "main",
         "title": "echomoss",
-        "width": 1040,
-        "height": 720,
-        "minWidth": 820,
-        "minHeight": 590,
+        "width": 1120,
+        "height": 790,
+        "minWidth": 800,
+        "minHeight": 620,
         "center": true,
         "decorations": false,
         "resizable": true,
         "fullscreen": false,
-        "backgroundColor": "#050b10"
+        "backgroundColor": "#04090d"
       }
     ],
     "security": {
