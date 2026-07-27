@@ -1,4 +1,4 @@
-import { Copy, ExternalLink, Link2, Unplug } from "lucide-react";
+import { Copy, ExternalLink, Link2, ShieldCheck, Unplug } from "lucide-react";
 import { useState } from "react";
 import { isNativeRuntime, openSpotifyDashboard } from "../lib/native";
 import type { SpotifyStatus } from "../lib/types";
@@ -27,30 +27,45 @@ export function ConnectPanel({
 
   const copyRedirect = async () => {
     if (!status?.redirectUri) return;
-    await navigator.clipboard.writeText(status.redirectUri);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1_500);
+    try {
+      await navigator.clipboard.writeText(status.redirectUri);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1_500);
+    } catch {
+      setCopied(false);
+    }
   };
 
   return (
-    <section className="connect-panel">
-      <div className="connect-panel__icon">
-        <BotanicalSprite index={7} size="large" />
-      </div>
-      <div className="connect-panel__copy">
-        <span className="connect-panel__eyebrow">
-          {status?.connected ? "LOCAL LINK ACTIVE" : "OPTIONAL SPOTIFY LINK"}
+    <section
+      className="connect-panel"
+      data-connected={status?.connected || undefined}
+    >
+      <div className="panel-label">
+        <span>SIGNAL LINK</span>
+        <span className="panel-label__reading">
+          <i className={status?.connected ? "link-dot is-live" : "link-dot"} />
+          {status?.connected ? "encrypted / live" : "optional"}
         </span>
-        <h2>
-          {status?.connected
-            ? "Your listening habitat is connected."
-            : "Let Spotify wake the terrarium."}
-        </h2>
-        <p>
-          {isDesktop
-            ? "echomoss reads playback metadata through Spotify's official API. Tokens stay encrypted on this computer."
-            : "The visual preview uses fictional local tracks. Run the native Tauri app to connect a Spotify account."}
-        </p>
+      </div>
+
+      <div className="connect-panel__intro">
+        <div className="connect-panel__icon">
+          <BotanicalSprite index={7} size="medium" />
+        </div>
+        <div className="connect-panel__copy">
+          <span className="connect-panel__eyebrow">
+            {status?.connected ? "LOCAL LINK ACTIVE" : "SPOTIFY BRIDGE"}
+          </span>
+          <h2>
+            {status?.connected ? "Signal secured." : "Wake it with Spotify."}
+          </h2>
+          <p>
+            {isDesktop
+              ? "Playback metadata enters here. Tokens remain in the operating-system vault."
+              : "Previewing with fictional local tracks. Spotify linking is available in the native app."}
+          </p>
+        </div>
       </div>
 
       {isDesktop && !status?.configured ? (
@@ -66,6 +81,8 @@ export function ConnectPanel({
             <input
               autoComplete="off"
               id="client-id"
+              maxLength={64}
+              minLength={16}
               onChange={(event) => setClientId(event.target.value)}
               placeholder="Paste your app Client ID"
               spellCheck="false"
@@ -121,12 +138,21 @@ export function ConnectPanel({
           onClick={() => void openSpotifyDashboard()}
           type="button"
         >
-          Developer dashboard
+          Dashboard
           <ExternalLink size={13} />
         </button>
       </div>
 
-      {error ? <p className="connect-panel__error">{error}</p> : null}
+      <p className="connect-panel__privacy">
+        <ShieldCheck size={12} />
+        PKCE · no client secret · local credential vault
+      </p>
+
+      {error ? (
+        <p aria-live="polite" className="connect-panel__error">
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 }

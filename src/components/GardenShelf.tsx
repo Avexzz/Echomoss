@@ -1,3 +1,9 @@
+import type { CSSProperties } from "react";
+import {
+  SPECIMEN_NAMES,
+  gardenLevel,
+  gardenVitality,
+} from "../lib/presentation";
 import type { GardenStats } from "../lib/types";
 import { BotanicalSprite } from "./BotanicalSprite";
 
@@ -5,25 +11,11 @@ interface GardenShelfProps {
   stats: GardenStats;
 }
 
-const SPECIMEN_NAMES = [
-  "violet bloom",
-  "fern clipping",
-  "velvet moss",
-  "field mushroom",
-  "amber firefly",
-  "pale moth",
-  "rain sample",
-  "night crescent",
-  "tape relic",
-  "listening shell",
-  "signal trace",
-  "watering vessel",
-  "lamp fragment",
-  "pressed leaf",
-];
-
 export function GardenShelf({ stats }: GardenShelfProps) {
   const minutes = Math.floor(stats.listeningSeconds / 60);
+  const vitality = gardenVitality(stats);
+  const visibleSpecimens = stats.discoveredSpecies.slice(-6);
+  const emptySlots = Math.max(0, 6 - visibleSpecimens.length);
 
   return (
     <section className="garden-shelf">
@@ -32,6 +24,23 @@ export function GardenShelf({ stats }: GardenShelfProps) {
         <span>
           {String(stats.discoveredSpecies.length).padStart(2, "0")} found
         </span>
+      </div>
+
+      <div className="vitality">
+        <div
+          className="vitality__ring"
+          style={{ "--vitality": `${vitality * 3.6}deg` } as CSSProperties}
+        >
+          <div>
+            <strong>{vitality}</strong>
+            <span>%</span>
+          </div>
+        </div>
+        <div className="vitality__copy">
+          <span>HABITAT VITALITY</span>
+          <strong>{gardenLevel(stats)}</strong>
+          <small>local growth index</small>
+        </div>
       </div>
 
       <div className="garden-stats">
@@ -52,21 +61,25 @@ export function GardenShelf({ stats }: GardenShelfProps) {
       </div>
 
       <div className="specimen-grid">
-        {stats.discoveredSpecies.slice(-8).map((index) => (
-          <div className="specimen" key={index}>
+        {visibleSpecimens.map((index, position) => (
+          <div
+            className="specimen"
+            key={index}
+            style={
+              { "--specimen-delay": `${position * 45}ms` } as CSSProperties
+            }
+          >
             <BotanicalSprite index={index} size="medium" />
-            <span>{SPECIMEN_NAMES[index - 1] || "unknown specimen"}</span>
+            <span>{SPECIMEN_NAMES[index] || "unknown specimen"}</span>
+            <small>{String(index + 1).padStart(2, "0")}</small>
           </div>
         ))}
-        {Array.from(
-          { length: Math.max(0, 4 - stats.discoveredSpecies.length) },
-          (_, index) => (
-            <div className="specimen specimen--empty" key={`empty-${index}`}>
-              <span>?</span>
-              <small>undiscovered</small>
-            </div>
-          ),
-        )}
+        {Array.from({ length: emptySlots }, (_, index) => (
+          <div className="specimen specimen--empty" key={`empty-${index}`}>
+            <span>?</span>
+            <small>undiscovered</small>
+          </div>
+        ))}
       </div>
     </section>
   );
