@@ -1,16 +1,16 @@
-import { Activity, Leaf, Minus, Moon, Square, X } from "lucide-react";
+import { Leaf, Minus, Settings2, X } from "lucide-react";
 import { invokeNative, isNativeRuntime } from "../lib/native";
 
 interface TitleBarProps {
   mode: "demo" | "spotify";
-  reducedMotion: boolean;
-  onToggleMotion: () => void;
+  settingsOpen: boolean;
+  onToggleSettings: () => void;
 }
 
 export function TitleBar({
   mode,
-  reducedMotion,
-  onToggleMotion,
+  settingsOpen,
+  onToggleSettings,
 }: TitleBarProps) {
   const native = isNativeRuntime();
 
@@ -18,30 +18,24 @@ export function TitleBar({
     <header className="title-bar" data-tauri-drag-region>
       <div className="title-bar__identity" data-tauri-drag-region>
         <span className="title-bar__mark">
-          <Leaf aria-hidden="true" size={13} />
+          <Leaf aria-hidden="true" size={12} />
         </span>
         <span className="title-bar__name">echomoss</span>
-        <span className="title-bar__divider">/</span>
         <span className="title-bar__status">
           <i className={mode === "spotify" ? "is-live" : ""} />
-          {mode === "spotify" ? "live habitat" : "field demo"}
+          {mode === "spotify" ? "listening" : "demo"}
         </span>
       </div>
 
       <div className="title-bar__utilities">
         <button
-          aria-label={
-            reducedMotion
-              ? "Enable ambient animation"
-              : "Reduce ambient animation"
-          }
-          className="motion-toggle"
-          onClick={onToggleMotion}
-          title={reducedMotion ? "Wake ambient motion" : "Let motion rest"}
+          aria-label="Open settings"
+          aria-pressed={settingsOpen}
+          className="settings-toggle"
+          onClick={onToggleSettings}
           type="button"
         >
-          {reducedMotion ? <Moon size={12} /> : <Activity size={12} />}
-          <span>{reducedMotion ? "motion resting" : "motion awake"}</span>
+          <Settings2 size={13} />
         </button>
 
         {native ? (
@@ -51,14 +45,7 @@ export function TitleBar({
               onClick={() => void invokeNative("window_minimize")}
               type="button"
             >
-              <Minus size={14} />
-            </button>
-            <button
-              aria-label="Maximize or restore"
-              onClick={() => void invokeNative("window_toggle_maximize")}
-              type="button"
-            >
-              <Square size={11} />
+              <Minus size={13} />
             </button>
             <button
               aria-label="Close"
@@ -66,11 +53,11 @@ export function TitleBar({
               onClick={() => void invokeNative("window_close")}
               type="button"
             >
-              <X size={14} />
+              <X size={13} />
             </button>
           </div>
         ) : (
-          <span className="title-bar__browser">visual preview</span>
+          <span className="title-bar__browser">preview</span>
         )}
       </div>
     </header>

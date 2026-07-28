@@ -21,11 +21,12 @@ habitat: tracks wake the moss, changes attract a moth, and completed songs leave
 specimens behind.
 
 It also works without Spotify. The native app ships with a fictional local playlist so the
-interface, controls and terrarium states can be explored immediately.
+terrarium reactions can be explored immediately.
 
 ## What makes it different
 
-- **One focused object.** The terrarium is the product, not decoration around a dashboard.
+- **One focused object.** The 360×400 popup is almost entirely terrarium, with no dashboard
+  or permanent settings chrome.
 - **Handmade pixel language.** Every visual belongs to one midnight botanical instrument.
 - **Metadata-reactive, not audio-synced.** It responds to track, progress and play state; it
   never analyzes or visualizes Spotify's raw audio.
@@ -36,14 +37,16 @@ interface, controls and terrarium states can be explored immediately.
   Windows Credential Manager through Rust's system keyring.
 - **No client secret in the app.** Authorization uses OAuth 2.0 Authorization Code with PKCE
   and a loopback callback.
-- **Motion can rest.** The motion toggle and the operating-system reduced-motion preference
-  stop decorative animation.
+- **Motion can rest.** The hidden settings drawer and the operating-system reduced-motion
+  preference stop decorative animation.
 
 ## Current specimen
 
 - Four-state terrarium: dormant, listening, track drift and bloom
-- Working demo playback with previous, play/pause and next controls
-- Persistent bloom, listening-time and specimen counters
+- Low-frame-rate rain, lamp, firefly, moth and flower reactions
+- Click/tap reaction with a tiny heart and pixel burst
+- Track title, artwork and progress embedded inside the glass
+- Persistent bloom, listening-time and specimen state
 - Sixteen original botanical UI sprites
 - Optional Spotify connection in the desktop build
 - Playback controls routed through the Spotify Web API
@@ -102,8 +105,8 @@ The included GitHub Actions workflow also produces a downloadable
    ```
 
 3. Start echomoss with `npm run dev`.
-4. Paste the app's **Client ID** into the local connection panel.
-5. Choose **Connect Spotify** and approve the requested playback scopes.
+4. Open the tiny gear drawer and paste the app's **Client ID**.
+5. Choose **Wake with Spotify** and approve the requested playback scopes.
 
 Spotify Developer Mode access rules and account requirements may change. Check the
 [official Web API documentation](https://developer.spotify.com/documentation/web-api) if an
@@ -135,7 +138,7 @@ echomoss/
 │   └── tauri.conf.json     # native window and NSIS bundle settings
 ├── public/assets/          # production pixel-art sheets and app icon
 ├── src/
-│   ├── components/         # terrarium, player, shelf and connection panel
+│   ├── components/         # reactive terrarium and hidden connection drawer
 │   ├── hooks/              # demo/Spotify playback controller
 │   └── lib/                # garden state, types and tests
 ├── docs/                   # preview and reproducible asset prompts
@@ -147,19 +150,19 @@ set of typed Tauri commands and receives only normalized playback metadata.
 
 ## Visual state map
 
-| Playback event           | Habitat response                   |
-| ------------------------ | ---------------------------------- |
-| Paused or no active item | Dormant night terrarium            |
-| Playing                  | Cyan pulse and wandering fireflies |
-| Track changed early      | Moth crossing / drift state        |
-| Track changed after 88%  | Full bloom and a new specimen      |
+| Playback event           | Habitat response                    |
+| ------------------------ | ----------------------------------- |
+| Paused or no active item | Dormant night terrarium             |
+| Playing                  | Cyan pulse and wandering fireflies  |
+| Track changed early      | Moth crossing / drift state         |
+| Track changed after 88%  | Full bloom and a new specimen       |
+| Terrarium clicked        | Chibi wiggle, heart and pixel burst |
 
 The response is intentionally low-frequency and state-based. echomoss is not an audio
 visualizer.
 
 ## Roadmap
 
-- Tiny always-on-top habitat window
 - Native tray controls and a compact always-on-top habitat mode
 - Garden export/import
 - More deterministic specimen families

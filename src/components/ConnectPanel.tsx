@@ -42,10 +42,10 @@ export function ConnectPanel({
       data-connected={status?.connected || undefined}
     >
       <div className="panel-label">
-        <span>SIGNAL LINK</span>
+        <span>SPOTIFY NOOK</span>
         <span className="panel-label__reading">
           <i className={status?.connected ? "link-dot is-live" : "link-dot"} />
-          {status?.connected ? "encrypted / live" : "optional"}
+          {status?.connected ? "awake" : "optional"}
         </span>
       </div>
 
@@ -55,15 +55,17 @@ export function ConnectPanel({
         </div>
         <div className="connect-panel__copy">
           <span className="connect-panel__eyebrow">
-            {status?.connected ? "LOCAL LINK ACTIVE" : "SPOTIFY BRIDGE"}
+            {status?.connected ? "MUSIC FOUND" : "ONE-TIME SETUP"}
           </span>
           <h2>
-            {status?.connected ? "Signal secured." : "Wake it with Spotify."}
+            {status?.connected
+              ? "The moss can hear you!"
+              : "Bring your music in"}
           </h2>
           <p>
             {isDesktop
-              ? "Playback metadata enters here. Tokens remain in the operating-system vault."
-              : "Previewing with fictional local tracks. Spotify linking is available in the native app."}
+              ? "Only track details are read. Your login stays safely on this computer."
+              : "This preview uses tiny fictional songs. Spotify lives in the desktop app."}
           </p>
         </div>
       </div>
@@ -92,9 +94,7 @@ export function ConnectPanel({
               Save
             </button>
           </div>
-          <small>
-            Add the redirect URI below in your Spotify developer app.
-          </small>
+          <small>Add the little address below to your Spotify app.</small>
         </form>
       ) : null}
 
@@ -119,7 +119,7 @@ export function ConnectPanel({
             type="button"
           >
             <Link2 size={15} />
-            {loading ? "Opening Spotify…" : "Connect Spotify"}
+            {loading ? "Opening Spotify…" : "Wake with Spotify"}
           </button>
         ) : null}
         {isDesktop && status?.connected ? (
@@ -138,14 +138,14 @@ export function ConnectPanel({
           onClick={() => void openSpotifyDashboard()}
           type="button"
         >
-          Dashboard
+          Spotify app page
           <ExternalLink size={13} />
         </button>
       </div>
 
       <p className="connect-panel__privacy">
         <ShieldCheck size={12} />
-        PKCE · no client secret · local credential vault
+        PKCE · no secret · stays on this pc
       </p>
 
       {error ? (

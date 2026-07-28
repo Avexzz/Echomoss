@@ -1,113 +1,117 @@
-import { Activity, Leaf, Sparkles } from "lucide-react";
-import type { CSSProperties } from "react";
+import { Activity, Moon, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { AmbientField } from "./components/AmbientField";
+import { BotanicalSprite } from "./components/BotanicalSprite";
 import { ConnectPanel } from "./components/ConnectPanel";
-import { GardenShelf } from "./components/GardenShelf";
-import { PlayerDeck } from "./components/PlayerDeck";
 import { Terrarium } from "./components/Terrarium";
 import { TitleBar } from "./components/TitleBar";
 import { useHabitat } from "./hooks/use-habitat";
 import { usePlayback } from "./hooks/use-playback";
-import { progressRatio } from "./lib/garden";
-import { HABITAT_PRESENTATION } from "./lib/presentation";
 
 export default function App() {
   const controller = usePlayback();
-  const playback = controller.playback;
-  const habitat = useHabitat(playback);
-  const presentation = HABITAT_PRESENTATION[habitat.state];
-  const trackProgress = Math.round(progressRatio(playback) * 100);
-  const progressStyle = {
-    "--track-angle": `${trackProgress * 3.6}deg`,
-  } as CSSProperties;
+  const habitat = useHabitat(controller.playback);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSettingsOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [settingsOpen]);
 
   return (
-    <div className="app-shell" data-habitat-state={habitat.state}>
+    <div
+      className="app-shell"
+      data-habitat-state={habitat.state}
+      data-settings-open={settingsOpen || undefined}
+    >
       <AmbientField />
-      <TitleBar
-        mode={controller.mode}
-        onToggleMotion={habitat.toggleMotion}
-        reducedMotion={habitat.reducedMotion}
-      />
 
-      <main className="station">
-        <header className="station-heading">
-          <div className="station-heading__copy">
-            <span className="station-heading__index">
-              <i className={`signal-dot signal-dot--${habitat.state}`} />
-              FIELD UNIT 07 · {presentation.label}
-            </span>
-            <h1>
-              Where listening <em>takes root.</em>
-            </h1>
-            <p>
-              A native listening habitat where each finished track leaves a
-              small, permanent trace.
-            </p>
-          </div>
+      <div className="pixel-window">
+        <TitleBar
+          mode={controller.mode}
+          onToggleSettings={() => setSettingsOpen((current) => !current)}
+          settingsOpen={settingsOpen}
+        />
 
-          <div className="session-dial" style={progressStyle}>
-            <div className="session-dial__ring">
-              <div>
-                <strong>{String(trackProgress).padStart(2, "0")}</strong>
-                <span>%</span>
-              </div>
-            </div>
-            <div className="session-dial__copy">
-              <span>current cycle</span>
-              <strong>{presentation.code}</strong>
-            </div>
-          </div>
-        </header>
+        <main className="pocket">
+          <Terrarium
+            playback={controller.playback}
+            reducedMotion={habitat.reducedMotion}
+            state={habitat.state}
+          />
+        </main>
 
-        <div className="habitat-grid">
-          <div className="habitat-primary">
-            <Terrarium
-              playback={playback}
-              reducedMotion={habitat.reducedMotion}
-              state={habitat.state}
+        {settingsOpen ? (
+          <div className="settings-layer">
+            <button
+              aria-label="Close settings"
+              className="settings-layer__backdrop"
+              onClick={() => setSettingsOpen(false)}
+              type="button"
             />
-            <PlayerDeck
-              loading={controller.loading}
-              mode={controller.mode}
-              onControl={controller.control}
-              playback={playback}
-            />
+            <section
+              aria-label="Echomoss settings"
+              aria-modal="true"
+              className="settings-card"
+              role="dialog"
+            >
+              <header className="settings-card__header">
+                <div>
+                  <BotanicalSprite index={10} size="small" />
+                  <div>
+                    <span>little drawer</span>
+                    <h2>settings & spotify</h2>
+                  </div>
+                </div>
+                <button
+                  aria-label="Close settings"
+                  onClick={() => setSettingsOpen(false)}
+                  type="button"
+                >
+                  <X size={15} />
+                </button>
+              </header>
+
+              <button
+                aria-pressed={!habitat.reducedMotion}
+                className="motion-setting"
+                onClick={habitat.toggleMotion}
+                type="button"
+              >
+                <span>
+                  {habitat.reducedMotion ? (
+                    <Moon size={15} />
+                  ) : (
+                    <Activity size={15} />
+                  )}
+                </span>
+                <div>
+                  <strong>tiny animations</strong>
+                  <small>
+                    {habitat.reducedMotion
+                      ? "resting quietly"
+                      : "awake and wiggling"}
+                  </small>
+                </div>
+                <i data-on={!habitat.reducedMotion || undefined} />
+              </button>
+
+              <ConnectPanel
+                error={controller.error}
+                loading={controller.loading}
+                onConnect={controller.connect}
+                onDisconnect={controller.disconnect}
+                onSetClientId={controller.setClientId}
+                status={controller.status}
+              />
+            </section>
           </div>
-
-          <aside className="habitat-rail">
-            <GardenShelf stats={habitat.garden} />
-            <aside className="field-note">
-              <div className="field-note__pin" />
-              <span>FIELD NOTE / 01</span>
-              <p>Metadata makes the weather. Listening makes the memory.</p>
-              <small>
-                no raw audio leaves the player · every specimen stays local
-              </small>
-            </aside>
-            <ConnectPanel
-              error={controller.error}
-              loading={controller.loading}
-              onConnect={controller.connect}
-              onDisconnect={controller.disconnect}
-              onSetClientId={controller.setClientId}
-              status={controller.status}
-            />
-          </aside>
-        </div>
-
-        <footer>
-          <span>
-            <Sparkles size={13} /> your garden remains on this device
-          </span>
-          <span>
-            <Activity size={13} /> metadata reactive · audio untouched
-          </span>
-          <span>
-            <Leaf size={13} /> ECHOMOSS · NATIVE SPECIMEN 0.2
-          </span>
-        </footer>
-      </main>
+        ) : null}
+      </div>
     </div>
   );
 }
