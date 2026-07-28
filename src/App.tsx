@@ -1,8 +1,7 @@
-import { Activity, Moon, X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { AmbientField } from "./components/AmbientField";
+import { useEffect, useState } from "preact/hooks";
 import { BotanicalSprite } from "./components/BotanicalSprite";
 import { ConnectPanel } from "./components/ConnectPanel";
+import { PixelIcon } from "./components/PixelIcon";
 import { Terrarium } from "./components/Terrarium";
 import { TitleBar } from "./components/TitleBar";
 import { useHabitat } from "./hooks/use-habitat";
@@ -28,8 +27,6 @@ export default function App() {
       data-habitat-state={habitat.state}
       data-settings-open={settingsOpen || undefined}
     >
-      <AmbientField />
-
       <div className="pixel-window">
         <TitleBar
           mode={controller.mode}
@@ -72,7 +69,7 @@ export default function App() {
                   onClick={() => setSettingsOpen(false)}
                   type="button"
                 >
-                  <X size={15} />
+                  <PixelIcon name="x" size={15} />
                 </button>
               </header>
 
@@ -84,9 +81,9 @@ export default function App() {
               >
                 <span>
                   {habitat.reducedMotion ? (
-                    <Moon size={15} />
+                    <PixelIcon name="moon" size={15} />
                   ) : (
-                    <Activity size={15} />
+                    <PixelIcon name="activity" size={15} />
                   )}
                 </span>
                 <div>

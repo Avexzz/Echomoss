@@ -1,7 +1,7 @@
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use keyring::Entry;
 use rand::{rngs::OsRng, RngCore};
-use reqwest::{Client, Method, StatusCode};
+use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -14,6 +14,8 @@ use std::{
 use tiny_http::{Header, Request, Response, Server, StatusCode as TinyStatusCode};
 use url::Url;
 
+use crate::open_url;
+
 const AUTHORIZE_URL: &str = "https://accounts.spotify.com/authorize";
 const TOKEN_URL: &str = "https://accounts.spotify.com/api/token";
 const API_URL: &str = "https://api.spotify.com/v1";
@@ -21,8 +23,7 @@ const CALLBACK_PORT: u16 = 43_821;
 const CALLBACK_URL: &str = "http://127.0.0.1:43821/callback";
 const KEYRING_SERVICE: &str = "dev.echomoss.app";
 const KEYRING_ACCOUNT: &str = "spotify-session";
-const SCOPES: &str =
-    "user-read-playback-state user-read-currently-playing user-modify-playback-state";
+const SCOPES: &str = "user-read-playback-state user-read-currently-playing";
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -199,8 +200,7 @@ impl SpotifyState {
 
         let server = Server::http(("127.0.0.1", CALLBACK_PORT))
             .map_err(|error| format!("Could not start the local Spotify callback: {error}"))?;
-        webbrowser::open(authorize.as_str())
-            .map_err(|error| format!("Could not open Spotify's secure sign-in page: {error}"))?;
+        open_url(authorize.as_str())?;
 
         let authorization = tauri::async_runtime::spawn_blocking(move || {
             wait_for_authorization(server, &expected_state)
@@ -303,11 +303,7 @@ impl SpotifyState {
         }
     }
 
-    async fn api(
-        &self,
-        method: Method,
-        path: &str,
-    ) -> Result<Option<serde_json::Value>, String> {
+    async fn api(&self, path: &str) -> Result<Option<serde_json::Value>, String> {
         for attempt in 0..2 {
             let access_token = if attempt == 0 {
                 self.access_token().await?
@@ -316,7 +312,7 @@ impl SpotifyState {
             };
             let response = self
                 .client
-                .request(method.clone(), format!("{API_URL}{path}"))
+                .get(format!("{API_URL}{path}"))
                 .bearer_auth(access_token)
                 .send()
                 .await
@@ -345,7 +341,7 @@ impl SpotifyState {
     }
 
     pub async fn playback(&self) -> Result<Option<Playback>, String> {
-        let Some(payload) = self.api(Method::GET, "/me/player").await? else {
+        let Some(payload) = self.api("/me/player").await? else {
             return Ok(None);
         };
         let Some(item) = payload.get("item").filter(|value| !value.is_null()) else {
@@ -412,18 +408,6 @@ impl SpotifyState {
                 .to_string(),
             fetched_at: now_ms(),
         }))
-    }
-
-    pub async fn control(&self, action: &str) -> Result<(), String> {
-        let (method, path) = match action {
-            "play" => (Method::PUT, "/me/player/play"),
-            "pause" => (Method::PUT, "/me/player/pause"),
-            "next" => (Method::POST, "/me/player/next"),
-            "previous" => (Method::POST, "/me/player/previous"),
-            _ => return Err("Unknown playback command.".into()),
-        };
-        self.api(method, path).await?;
-        Ok(())
     }
 }
 

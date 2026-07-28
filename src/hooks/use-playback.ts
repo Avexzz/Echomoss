@@ -1,12 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { createDemoPlayback, demoTrackCount } from "../lib/demo";
 import { invokeNative, isNativeRuntime } from "../lib/native";
-import type {
-  Playback,
-  PlaybackAction,
-  PlaybackController,
-  SpotifyStatus,
-} from "../lib/types";
+import type { Playback, PlaybackController, SpotifyStatus } from "../lib/types";
 
 const POLL_INTERVAL = 8_000;
 
@@ -18,12 +13,12 @@ export function usePlayback(): PlaybackController {
   );
   const [loading, setLoading] = useState(native);
   const [error, setError] = useState<string | null>(null);
-  const demoIndex = useRef(0);
-  const refreshInFlight = useRef<Promise<void> | null>(null);
+  const demoIndexRef = useRef(0);
+  const refreshInFlightRef = useRef<Promise<void> | null>(null);
 
   const refresh = useCallback((): Promise<void> => {
     if (!native) return Promise.resolve();
-    if (refreshInFlight.current) return refreshInFlight.current;
+    if (refreshInFlightRef.current) return refreshInFlightRef.current;
 
     const operation = (async () => {
       try {
@@ -43,10 +38,10 @@ export function usePlayback(): PlaybackController {
       }
     })();
 
-    refreshInFlight.current = operation;
+    refreshInFlightRef.current = operation;
     void operation.finally(() => {
-      if (refreshInFlight.current === operation) {
-        refreshInFlight.current = null;
+      if (refreshInFlightRef.current === operation) {
+        refreshInFlightRef.current = null;
       }
     });
     return operation;
@@ -82,8 +77,8 @@ export function usePlayback(): PlaybackController {
           progressMs >= current.durationMs &&
           (!native || !status?.connected)
         ) {
-          demoIndex.current = (demoIndex.current + 1) % demoTrackCount();
-          return createDemoPlayback(demoIndex.current);
+          demoIndexRef.current = (demoIndexRef.current + 1) % demoTrackCount();
+          return createDemoPlayback(demoIndexRef.current);
         }
         return { ...current, progressMs, fetchedAt: Date.now() };
       });
@@ -129,7 +124,7 @@ export function usePlayback(): PlaybackController {
     setLoading(true);
     try {
       setStatus(await invokeNative<SpotifyStatus>("spotify_disconnect"));
-      demoIndex.current = 0;
+      demoIndexRef.current = 0;
       setPlayback(createDemoPlayback());
       setError(null);
     } catch (caught) {
@@ -138,49 +133,6 @@ export function usePlayback(): PlaybackController {
       setLoading(false);
     }
   }, [native]);
-
-  const control = useCallback(
-    async (action: PlaybackAction) => {
-      if (native && status?.connected) {
-        setLoading(true);
-        if (action === "play" || action === "pause") {
-          setPlayback((current) =>
-            current
-              ? {
-                  ...current,
-                  isPlaying: action === "play",
-                  fetchedAt: Date.now(),
-                }
-              : current,
-          );
-        }
-        try {
-          await invokeNative<void>("spotify_control", { action });
-          window.setTimeout(() => void refresh(), 320);
-          setError(null);
-        } catch (caught) {
-          setError(messageFrom(caught));
-          await refresh();
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
-      setPlayback((current) => {
-        if (!current) return createDemoPlayback();
-        if (action === "play")
-          return { ...current, isPlaying: true, fetchedAt: Date.now() };
-        if (action === "pause")
-          return { ...current, isPlaying: false, fetchedAt: Date.now() };
-        const direction = action === "next" ? 1 : -1;
-        demoIndex.current =
-          (demoIndex.current + direction + demoTrackCount()) % demoTrackCount();
-        return createDemoPlayback(demoIndex.current);
-      });
-    },
-    [native, refresh, status?.connected],
-  );
 
   return {
     mode: native && status?.connected ? "spotify" : "demo",
@@ -191,7 +143,6 @@ export function usePlayback(): PlaybackController {
     setClientId,
     connect,
     disconnect,
-    control,
   };
 }
 

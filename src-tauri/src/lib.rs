@@ -1,7 +1,7 @@
 mod spotify;
 
 use spotify::{Playback, SpotifyState, SpotifyStatus};
-use std::fs;
+use std::{fs, process::Command};
 use tauri::{Manager, State, WebviewWindow};
 
 #[tauri::command]
@@ -9,23 +9,6 @@ fn window_minimize(window: WebviewWindow) -> Result<(), String> {
     window
         .minimize()
         .map_err(|error| format!("Could not minimize the window: {error}"))
-}
-
-#[tauri::command]
-fn window_toggle_maximize(window: WebviewWindow) -> Result<bool, String> {
-    let maximized = window
-        .is_maximized()
-        .map_err(|error| format!("Could not read the window state: {error}"))?;
-    if maximized {
-        window
-            .unmaximize()
-            .map_err(|error| format!("Could not restore the window: {error}"))?;
-    } else {
-        window
-            .maximize()
-            .map_err(|error| format!("Could not maximize the window: {error}"))?;
-    }
-    Ok(!maximized)
 }
 
 #[tauri::command]
@@ -37,8 +20,7 @@ fn window_close(window: WebviewWindow) -> Result<(), String> {
 
 #[tauri::command]
 fn open_spotify_dashboard() -> Result<(), String> {
-    webbrowser::open("https://developer.spotify.com/dashboard")
-        .map_err(|error| format!("Could not open the Spotify developer dashboard: {error}"))
+    open_url("https://developer.spotify.com/dashboard")
 }
 
 #[tauri::command]
@@ -73,12 +55,26 @@ async fn spotify_playback(
     state.playback().await
 }
 
-#[tauri::command]
-async fn spotify_control(
-    state: State<'_, SpotifyState>,
-    action: String,
-) -> Result<(), String> {
-    state.control(&action).await
+pub(crate) fn open_url(url: &str) -> Result<(), String> {
+    if !url.starts_with("https://") {
+        return Err("Only secure web addresses can be opened.".into());
+    }
+
+    #[cfg(target_os = "windows")]
+    let result = Command::new("rundll32")
+        .arg("url.dll,FileProtocolHandler")
+        .arg(url)
+        .spawn();
+
+    #[cfg(target_os = "macos")]
+    let result = Command::new("open").arg(url).spawn();
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let result = Command::new("xdg-open").arg(url).spawn();
+
+    result
+        .map(|_| ())
+        .map_err(|error| format!("Could not open the secure web page: {error}"))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -92,15 +88,13 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             window_minimize,
-            window_toggle_maximize,
             window_close,
             open_spotify_dashboard,
             spotify_status,
             spotify_set_client_id,
             spotify_connect,
             spotify_disconnect,
-            spotify_playback,
-            spotify_control
+            spotify_playback
         ])
         .run(tauri::generate_context!())
         .expect("error while running echomoss");

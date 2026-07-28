@@ -1,5 +1,5 @@
-import type { CSSProperties } from "react";
-import { useEffect, useRef, useState } from "react";
+import type { JSX } from "preact";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { progressRatio } from "../lib/garden";
 import { HABITAT_PRESENTATION } from "../lib/presentation";
 import type { Playback, VisualState } from "../lib/types";
@@ -45,22 +45,24 @@ export function Terrarium({ state, reducedMotion, playback }: TerrariumProps) {
   const copy = HABITAT_PRESENTATION[state];
   const progress = Math.round(progressRatio(playback) * 100);
   const [poked, setPoked] = useState(false);
-  const pokeTimer = useRef<number | null>(null);
+  const pokeTimerRef = useRef<number | null>(null);
 
   useEffect(
     () => () => {
-      if (pokeTimer.current !== null) window.clearTimeout(pokeTimer.current);
+      if (pokeTimerRef.current !== null)
+        window.clearTimeout(pokeTimerRef.current);
     },
     [],
   );
 
   const reactToPoke = () => {
-    if (pokeTimer.current !== null) window.clearTimeout(pokeTimer.current);
+    if (pokeTimerRef.current !== null)
+      window.clearTimeout(pokeTimerRef.current);
     setPoked(false);
     window.requestAnimationFrame(() => setPoked(true));
-    pokeTimer.current = window.setTimeout(
+    pokeTimerRef.current = window.setTimeout(
       () => {
-        pokeTimer.current = null;
+        pokeTimerRef.current = null;
         setPoked(false);
       },
       reducedMotion ? 280 : 900,
@@ -111,7 +113,7 @@ export function Terrarium({ state, reducedMotion, playback }: TerrariumProps) {
                       "--firefly-delay": delay,
                       "--firefly-drift-x": driftX,
                       "--firefly-drift-y": driftY,
-                    } as CSSProperties
+                    } as JSX.CSSProperties
                   }
                 />
               ))}
@@ -125,7 +127,7 @@ export function Terrarium({ state, reducedMotion, playback }: TerrariumProps) {
                       "--pixel-x": x,
                       "--pixel-y": y,
                       "--pixel-delay": delay,
-                    } as CSSProperties
+                    } as JSX.CSSProperties
                   }
                 />
               ))}
@@ -148,7 +150,7 @@ export function Terrarium({ state, reducedMotion, playback }: TerrariumProps) {
                   {
                     "--petal-angle": `${index * 45}deg`,
                     "--petal-delay": `${index * 45}ms`,
-                  } as CSSProperties
+                  } as JSX.CSSProperties
                 }
               />
             ))}
@@ -166,7 +168,7 @@ export function Terrarium({ state, reducedMotion, playback }: TerrariumProps) {
                     "--poke-x": `${(index % 3) * 24 - 24}px`,
                     "--poke-y": `${Math.floor(index / 3) * 18 - 30}px`,
                     "--poke-delay": `${index * 35}ms`,
-                  } as CSSProperties
+                  } as JSX.CSSProperties
                 }
               />
             ))}

@@ -1,8 +1,8 @@
-import { Copy, ExternalLink, Link2, ShieldCheck, Unplug } from "lucide-react";
-import { useState } from "react";
+import { useState } from "preact/hooks";
 import { isNativeRuntime, openSpotifyDashboard } from "../lib/native";
 import type { SpotifyStatus } from "../lib/types";
 import { BotanicalSprite } from "./BotanicalSprite";
+import { PixelIcon } from "./PixelIcon";
 
 interface ConnectPanelProps {
   status: SpotifyStatus | null;
@@ -85,9 +85,9 @@ export function ConnectPanel({
               id="client-id"
               maxLength={64}
               minLength={16}
-              onChange={(event) => setClientId(event.target.value)}
+              onChange={(event) => setClientId(event.currentTarget.value)}
               placeholder="Paste your app Client ID"
-              spellCheck="false"
+              spellcheck={false}
               value={clientId}
             />
             <button disabled={loading || !clientId.trim()} type="submit">
@@ -105,7 +105,7 @@ export function ConnectPanel({
           type="button"
         >
           <span>{status.redirectUri}</span>
-          <Copy size={13} />
+          <PixelIcon name="copy" size={13} />
           <em>{copied ? "copied" : "copy redirect"}</em>
         </button>
       ) : null}
@@ -118,7 +118,7 @@ export function ConnectPanel({
             onClick={() => void onConnect()}
             type="button"
           >
-            <Link2 size={15} />
+            <PixelIcon name="link" size={15} />
             {loading ? "Opening Spotify…" : "Wake with Spotify"}
           </button>
         ) : null}
@@ -129,7 +129,7 @@ export function ConnectPanel({
             onClick={() => void onDisconnect()}
             type="button"
           >
-            <Unplug size={15} />
+            <PixelIcon name="unplug" size={15} />
             Disconnect
           </button>
         ) : null}
@@ -139,12 +139,12 @@ export function ConnectPanel({
           type="button"
         >
           Spotify app page
-          <ExternalLink size={13} />
+          <PixelIcon name="external" size={13} />
         </button>
       </div>
 
       <p className="connect-panel__privacy">
-        <ShieldCheck size={12} />
+        <PixelIcon name="shield" size={12} />
         PKCE · no secret · stays on this pc
       </p>
 
