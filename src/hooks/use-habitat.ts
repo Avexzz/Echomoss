@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import {
   EMPTY_GARDEN,
   addCompletedTrack,
@@ -15,37 +15,35 @@ const TRANSIENT_DURATION = {
 } as const;
 
 export interface HabitatController {
-  garden: GardenStats;
   state: VisualState;
   reducedMotion: boolean;
   toggleMotion: () => void;
 }
 
 export function useHabitat(playback: Playback | null): HabitatController {
-  const [garden, setGarden] = useState<GardenStats>(loadGarden);
   const [reducedMotion, setReducedMotion] = useState(initialMotionPreference);
   const [state, setState] = useState<VisualState>(
     playback?.isPlaying ? "playing" : "dormant",
   );
-  const previousPlayback = useRef<Playback | null>(playback);
-  const transientTimer = useRef<number | null>(null);
-  const playbackIsActive = useRef(Boolean(playback?.isPlaying));
-  const gardenSnapshot = useRef(garden);
-  const manualMotionPreference = useRef(
+  const previousPlaybackRef = useRef<Playback | null>(playback);
+  const transientTimerRef = useRef<number | null>(null);
+  const playbackIsActiveRef = useRef(Boolean(playback?.isPlaying));
+  const gardenSnapshotRef = useRef<GardenStats>(loadGarden());
+  const manualMotionPreferenceRef = useRef(
     localStorage.getItem(MOTION_KEY) !== null,
   );
 
   const clearTransient = useCallback(() => {
-    if (transientTimer.current !== null) {
-      window.clearTimeout(transientTimer.current);
-      transientTimer.current = null;
+    if (transientTimerRef.current !== null) {
+      window.clearTimeout(transientTimerRef.current);
+      transientTimerRef.current = null;
     }
   }, []);
 
   useEffect(() => {
-    playbackIsActive.current = Boolean(playback?.isPlaying);
+    playbackIsActiveRef.current = Boolean(playback?.isPlaying);
     const synchronize = window.setTimeout(() => {
-      const previous = previousPlayback.current;
+      const previous = previousPlaybackRef.current;
       const trackChanged = Boolean(
         previous && playback && previous.id !== playback.id,
       );
@@ -61,22 +59,25 @@ export function useHabitat(playback: Playback | null): HabitatController {
         setState(transientState);
 
         if (completed) {
-          setGarden((current) => addCompletedTrack(current, previous.id));
+          gardenSnapshotRef.current = addCompletedTrack(
+            gardenSnapshotRef.current,
+            previous.id,
+          );
         }
 
         clearTransient();
-        transientTimer.current = window.setTimeout(
+        transientTimerRef.current = window.setTimeout(
           () => {
-            transientTimer.current = null;
-            setState(playbackIsActive.current ? "playing" : "dormant");
+            transientTimerRef.current = null;
+            setState(playbackIsActiveRef.current ? "playing" : "dormant");
           },
           reducedMotion ? 320 : TRANSIENT_DURATION[transientState],
         );
-      } else if (transientTimer.current === null) {
+      } else if (transientTimerRef.current === null) {
         setState("playing");
       }
 
-      previousPlayback.current = playback;
+      previousPlaybackRef.current = playback;
     }, 0);
 
     return () => window.clearTimeout(synchronize);
@@ -86,20 +87,18 @@ export function useHabitat(playback: Playback | null): HabitatController {
 
   useEffect(() => {
     if (!playback?.isPlaying) return;
-    const listeningTick = window.setInterval(
-      () => setGarden((current) => addListeningSecond(current)),
-      1_000,
-    );
+    const listeningTick = window.setInterval(() => {
+      gardenSnapshotRef.current = addListeningSecond(gardenSnapshotRef.current);
+    }, 1_000);
     return () => window.clearInterval(listeningTick);
   }, [playback?.isPlaying]);
 
   useEffect(() => {
-    gardenSnapshot.current = garden;
-  }, [garden]);
-
-  useEffect(() => {
     const persist = () => {
-      localStorage.setItem(GARDEN_KEY, JSON.stringify(gardenSnapshot.current));
+      localStorage.setItem(
+        GARDEN_KEY,
+        JSON.stringify(gardenSnapshotRef.current),
+      );
     };
     const persistenceTick = window.setInterval(persist, 5_000);
     window.addEventListener("pagehide", persist);
@@ -120,18 +119,18 @@ export function useHabitat(playback: Playback | null): HabitatController {
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const syncSystemPreference = (event: MediaQueryListEvent) => {
-      if (!manualMotionPreference.current) setReducedMotion(event.matches);
+      if (!manualMotionPreferenceRef.current) setReducedMotion(event.matches);
     };
     media.addEventListener("change", syncSystemPreference);
     return () => media.removeEventListener("change", syncSystemPreference);
   }, []);
 
   const toggleMotion = useCallback(() => {
-    manualMotionPreference.current = true;
+    manualMotionPreferenceRef.current = true;
     setReducedMotion((current) => !current);
   }, []);
 
-  return { garden, state, reducedMotion, toggleMotion };
+  return { state, reducedMotion, toggleMotion };
 }
 
 function loadGarden(): GardenStats {

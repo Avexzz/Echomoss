@@ -15,6 +15,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "types": ["vite/client", "vitest/globals"],
     "noUnusedLocals": true,
     "noUnusedParameters": true

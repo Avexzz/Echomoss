@@ -5,7 +5,7 @@
 
 **Every song leaves something growing.**
 
-Native Windows app · Tauri 2 · Rust · Spotify Web API · React
+Native Windows app · Tauri 2 · Rust · Spotify Web API · Preact
 </div>
 
 <p align="center">
@@ -33,6 +33,8 @@ terrarium reactions can be explored immediately.
 - **A real lightweight app.** Tauri opens echomoss in its own native window and uses the
   WebView2 runtime already present on modern Windows, so the project does not bundle a
   second browser engine.
+- **Fast by default.** The compact Preact runtime, local pixel icons and palette-optimized
+  WebP sheets keep the complete web payload below 300 KB.
 - **Local by design.** Garden progress lives on the device; OAuth tokens are protected by
   Windows Credential Manager through Rust's system keyring.
 - **No client secret in the app.** Authorization uses OAuth 2.0 Authorization Code with PKCE
@@ -49,7 +51,7 @@ terrarium reactions can be explored immediately.
 - Persistent bloom, listening-time and specimen state
 - Sixteen original botanical UI sprites
 - Optional Spotify connection in the desktop build
-- Playback controls routed through the Spotify Web API
+- Read-only playback metadata through the Spotify Web API
 - Frameless Tauri window backed by Rust commands
 - Automated Windows NSIS installer build
 
@@ -116,7 +118,6 @@ account cannot be authorized.
 
 - `user-read-playback-state`
 - `user-read-currently-playing`
-- `user-modify-playback-state`
 
 The Client ID is stored locally. No client secret is requested or bundled. Access and
 refresh tokens are kept in the operating-system credential vault rather than JavaScript
@@ -173,9 +174,9 @@ visualizer.
 
 All project art is original and included in the repository:
 
-- `public/assets/terrarium-states.png` — 2×2 habitat state sheet
-- `public/assets/botanical-ui-sprites.png` — 4×4 transparent object sheet
-- `public/assets/app-icon.png` — square desktop icon
+- `public/assets/terrarium-states.webp` — optimized 2×2 habitat state sheet
+- `public/assets/botanical-ui-sprites.webp` — optimized 4×4 transparent object sheet
+- `public/assets/app-icon.webp` — lightweight square preview icon
 - `src-tauri/icons/` — Windows and native bundle icons
 - `docs/github-social-preview.png` — repository and link-sharing banner
 

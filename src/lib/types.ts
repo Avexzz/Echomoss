@@ -1,5 +1,4 @@
 export type VisualState = "dormant" | "playing" | "transition" | "bloom";
-export type PlaybackAction = "play" | "pause" | "next" | "previous";
 
 export interface Playback {
   id: string;
@@ -38,5 +37,4 @@ export interface PlaybackController {
   setClientId: (clientId: string) => Promise<void>;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  control: (action: PlaybackAction) => Promise<void>;
 }

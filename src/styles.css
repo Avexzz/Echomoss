@@ -100,7 +100,6 @@ button:not(:disabled) {
     rgb(2 4 10 / 16%) 3px,
     rgb(2 4 10 / 16%) 4px
   );
-  mix-blend-mode: multiply;
 }
 
 .pixel-window {
@@ -137,51 +136,6 @@ button:not(:disabled) {
   right: 4px;
   bottom: 4px;
   transform: rotate(180deg);
-}
-
-.ambient-field {
-  position: fixed;
-  z-index: -1;
-  inset: 0;
-  contain: strict;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.ambient-field__glow {
-  position: absolute;
-  width: 260px;
-  border-radius: 50%;
-  opacity: 0.12;
-  aspect-ratio: 1;
-  filter: blur(64px);
-  animation: ambient-breathe 8s steps(6, end) infinite alternate;
-}
-
-.ambient-field__glow--cyan {
-  top: -120px;
-  right: -100px;
-  background: var(--mint);
-}
-
-.ambient-field__glow--amber {
-  bottom: -150px;
-  left: -110px;
-  background: var(--peach);
-  animation-delay: -4s;
-}
-
-.ambient-mote {
-  position: absolute;
-  top: var(--mote-y);
-  left: var(--mote-x);
-  width: var(--mote-size);
-  height: var(--mote-size);
-  opacity: 0.15;
-  background: var(--cream);
-  box-shadow: 0 0 5px var(--cream);
-  animation: ambient-mote var(--mote-duration) steps(8, end) var(--mote-delay)
-    infinite;
 }
 
 .title-bar {
@@ -433,23 +387,20 @@ button:not(:disabled) {
 
 .terrarium__scene {
   opacity: 0;
-  background-image: url("/assets/terrarium-states.png");
+  background-image: url("/assets/terrarium-states.webp");
   background-repeat: no-repeat;
   background-size: 200% 200%;
   image-rendering: pixelated;
   transform: scale(1.018);
-  filter: saturate(0.82) brightness(0.82);
   transition:
     opacity 520ms steps(6, end),
-    transform 700ms steps(7, end),
-    filter 520ms steps(6, end);
+    transform 700ms steps(7, end);
 }
 
 .terrarium__scene[data-active="true"] {
   z-index: 1;
   opacity: 1;
   transform: scale(1);
-  filter: saturate(1.02) brightness(1);
 }
 
 .terrarium__scene--dormant {
@@ -542,8 +493,12 @@ button:not(:disabled) {
   opacity: 0.16;
   border-radius: 50%;
   aspect-ratio: 1;
-  background: var(--peach);
-  filter: blur(30px);
+  background: radial-gradient(
+    circle,
+    rgb(240 173 126 / 72%) 0,
+    rgb(240 173 126 / 20%) 45%,
+    transparent 72%
+  );
   transition:
     opacity 450ms steps(5, end),
     transform 450ms steps(5, end),
@@ -552,20 +507,35 @@ button:not(:disabled) {
 
 .terrarium-shell[data-state="playing"] .terrarium__glow {
   opacity: 0.35;
-  background: var(--mint);
+  background: radial-gradient(
+    circle,
+    rgb(131 216 200 / 75%) 0,
+    rgb(131 216 200 / 18%) 45%,
+    transparent 72%
+  );
   transform: scale(1.2);
   animation: lamp-breathe 3s steps(5, end) infinite alternate;
 }
 
 .terrarium-shell[data-state="transition"] .terrarium__glow {
   opacity: 0.4;
-  background: var(--lavender);
+  background: radial-gradient(
+    circle,
+    rgb(196 171 231 / 78%) 0,
+    rgb(196 171 231 / 18%) 45%,
+    transparent 72%
+  );
   transform: scale(1.3);
 }
 
 .terrarium-shell[data-state="bloom"] .terrarium__glow {
   opacity: 0.56;
-  background: var(--cream);
+  background: radial-gradient(
+    circle,
+    rgb(255 242 210 / 82%) 0,
+    rgb(255 242 210 / 20%) 45%,
+    transparent 72%
+  );
   transform: scale(1.55);
 }
 
@@ -767,13 +737,12 @@ button:not(:disabled) {
   border: 2px solid #424966;
   padding: 4px 7px 6px 5px;
   color: var(--cream);
-  background: rgb(15 20 35 / 92%);
+  background: rgb(15 20 35 / 97%);
   box-shadow:
     3px 3px 0 rgb(3 5 12 / 65%),
     inset 1px 1px 0 rgb(255 255 255 / 5%);
   pointer-events: none;
   animation: plaque-arrive 420ms steps(5, end) both;
-  backdrop-filter: blur(5px);
 }
 
 .track-plaque__art {
@@ -874,7 +843,7 @@ button:not(:disabled) {
 .botanical-sprite {
   display: inline-block;
   flex: 0 0 auto;
-  background-image: url("/assets/botanical-ui-sprites.png");
+  background-image: url("/assets/botanical-ui-sprites.webp");
   background-repeat: no-repeat;
   background-size: 400% 400%;
   image-rendering: pixelated;
@@ -908,8 +877,7 @@ button:not(:disabled) {
   inset: 0;
   border: 0;
   padding: 0;
-  background: rgb(5 8 17 / 76%);
-  backdrop-filter: blur(3px);
+  background: rgb(5 8 17 / 84%);
   animation: settings-fade 180ms steps(3, end) both;
 }
 
@@ -1238,35 +1206,6 @@ button:not(:disabled) {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes ambient-breathe {
-  from {
-    opacity: 0.08;
-    transform: scale(0.92);
-  }
-  to {
-    opacity: 0.15;
-    transform: scale(1.08);
-  }
-}
-
-@keyframes ambient-mote {
-  0%,
-  100% {
-    opacity: 0;
-    transform: translate3d(0, 10px, 0);
-  }
-  30% {
-    opacity: 0.32;
-  }
-  70% {
-    opacity: 0.12;
-    transform: translate3d(6px, -20px, 0);
-  }
-  100% {
-    transform: translate3d(-3px, -34px, 0);
   }
 }
 

@@ -29,7 +29,7 @@ export function createDemoPlayback(index = 0): Playback {
   return {
     ...track,
     type: "track",
-    coverUrl: "/assets/app-icon.png",
+    coverUrl: "/assets/app-icon.webp",
     progressMs: 42_000,
     isPlaying: true,
     deviceName: "echomoss demo",

@@ -6,12 +6,12 @@ logos or third-party character art.
 
 ## Production files
 
-| File                                     |       Size | Purpose                        |
-| ---------------------------------------- | ---------: | ------------------------------ |
-| `public/assets/terrarium-states.png`     |  1024×1024 | Four equal habitat states      |
-| `public/assets/botanical-ui-sprites.png` |  1024×1024 | Sixteen transparent UI objects |
-| `public/assets/app-icon.png`             |    512×512 | App and repository icon        |
-| `src-tauri/icons/icon.ico`               | multi-size | Windows package icon           |
+| File                                      |       Size | Purpose                        |
+| ----------------------------------------- | ---------: | ------------------------------ |
+| `public/assets/terrarium-states.webp`     |    768×768 | Four equal habitat states      |
+| `public/assets/botanical-ui-sprites.webp` |    512×512 | Sixteen transparent UI objects |
+| `public/assets/app-icon.webp`             |    128×128 | Lightweight in-app preview     |
+| `src-tauri/icons/icon.ico`                | multi-size | Windows package icon           |
 
 ## Terrarium state sheet
 
@@ -64,8 +64,8 @@ Sprite order, left to right and top to bottom:
 03 moss             07 seed jar        11 headphones     15 pressed leaf
 ```
 
-The magenta key was removed with a soft matte and despill pass. The shipped PNG uses RGBA
-transparency.
+The magenta key was removed with a soft matte and despill pass. The shipped WebP preserves
+transparency with a reduced palette.
 
 ## App icon
 

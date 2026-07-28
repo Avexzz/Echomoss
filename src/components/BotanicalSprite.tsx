@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { JSX } from "preact";
 
 interface BotanicalSpriteProps {
   index: number;
@@ -14,7 +14,7 @@ export function BotanicalSprite({
   const safeIndex = Math.max(0, Math.min(15, index));
   const column = safeIndex % 4;
   const row = Math.floor(safeIndex / 4);
-  const style: CSSProperties = {
+  const style: JSX.CSSProperties = {
     backgroundPosition: `${column * 33.333}% ${row * 33.333}%`,
   };
 
